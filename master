@@ -1,19 +1,20 @@
 #!/bin/bash
 
+# The below is purely for dev use only, not production
+
 echo ==================================================
-echo Starting Vault ...
+echo Starting Vault \(outside of pod\) on port 8888 ...
 echo ==================================================
 podman run -d \
   --name vault \
   --restart unless-stopped \
-  -e 'VAULT_LOCAL_CONFIG={"backend": {"file": {"path": "/vault/data"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "disable_mlock": "true"}' \
-  -e 'VAULT_ADDR=http://0.0.0.0:8200' \
-  -e 'VAULT_API_ADDR=http://0.0.0.0:8200' \
-  -v vault-config:/vault/config \
+  -e 'VAULT_LOCAL_CONFIG={"backend": {"file": {"path": "/vault/file"}}, "listener": {"tcp": {"address": "0.0.0.0:8888", "tls_disable": 1}}, "ui": 1, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "disable_mlock": 1}' \
+  -e 'VAULT_ADDR=http://0.0.0.0:8888' \
+  -e 'VAULT_API_ADDR=http://0.0.0.0:8888' \
   -v vault-policies:/vault/policies \
   -v vault-data:/vault/data \
   -v vault-logs:/vault/logs \
-  -p 8200:8200 \
+  -p 8888:8888 \
   vault server
 
 echo ==================================================
