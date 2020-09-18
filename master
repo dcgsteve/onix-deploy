@@ -11,6 +11,7 @@ podman run -d \
   -e 'VAULT_LOCAL_CONFIG={"backend": {"file": {"path": "/vault/file"}}, "listener": {"tcp": {"address": "0.0.0.0:8888", "tls_disable": 1}}, "ui": 1, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "disable_mlock": 1}' \
   -e 'VAULT_ADDR=http://0.0.0.0:8888' \
   -e 'VAULT_API_ADDR=http://0.0.0.0:8888' \
+  -v vault-config:/vault/config \
   -v vault-policies:/vault/policies \
   -v vault-data:/vault/data \
   -v vault-logs:/vault/logs \

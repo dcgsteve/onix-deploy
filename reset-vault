@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo Destroying Vault ...
+podman stop vault && podman rm vault
+podman volume rm vault-config
+podman volume rm vault-data
+podman volume rm vault-logs
+podman volume rm vault-policies
