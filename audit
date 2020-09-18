@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo ====================================================
+echo ITEM data
+echo ====================================================
+podman exec oxdb psql -c "select key, concat(left(txt,20),'...') as txt_snippet, created, updated from item order by updated" -q onix
+echo ====================================================
+echo ITEM audit - last 20
+echo ====================================================
+podman exec oxdb psql -c "select key, version, operation, name, description, concat(left(txt,20),'...') as txt_snippet, created, updated, changed, changed_by from item_change order by version desc limit 20" -q onix
+#podman exec oxdb psql -c "select * from item_change order by version desc limit 20" -q onix

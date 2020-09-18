@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo Destroying pod and ONIX data ...
+podman pod rm oxpod -f
+podman volume rm oxdb
+
+echo Stopping Vault \(leaving data intact\) ...
+podman stop vault && podman rm vault
