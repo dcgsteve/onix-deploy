@@ -33,14 +33,16 @@ echo ===========================================================================
 sleep 2
 
 echo ==============================================================================
-echo Initialising Vault and writing out unseal script and environment help file...
+echo Initialising Vault and writing out helper files ...
+echo   vault-env    \= environment variables
+echo   vault-unseal \= unseal script
+echo   vault-info   \= full key and token info for Vault
 echo NB. Obviously this is only for development not for production \!
 echo ==============================================================================
-vault operator init > vault.info
+vault operator init > vault-info
 echo export VAULT_ADDR=http://127.0.0.1:8888 > vault-env
-echo export VAULT_TOKEN=$( cat vault.info | grep "Initial Root Token" | awk -F ' ' '{print $4}' ) >> vault-env
-echo vault operator unseal $( cat vault.info | grep "Unseal Key 1" | awk -F ' ' '{print $4}' ) > vault-unseal
-echo vault operator unseal $( cat vault.info | grep "Unseal Key 2" | awk -F ' ' '{print $4}' ) >> vault-unseal
-echo vault operator unseal $( cat vault.info | grep "Unseal Key 3" | awk -F ' ' '{print $4}' ) >> vault-unseal
-rm vault.info
+echo export VAULT_TOKEN=$( cat vault-info | grep "Initial Root Token" | awk -F ' ' '{print $4}' ) >> vault-env
+echo vault operator unseal $( cat vault-info | grep "Unseal Key 1" | awk -F ' ' '{print $4}' ) > vault-unseal
+echo vault operator unseal $( cat vault-info | grep "Unseal Key 2" | awk -F ' ' '{print $4}' ) >> vault-unseal
+echo vault operator unseal $( cat vault-info | grep "Unseal Key 3" | awk -F ' ' '{print $4}' ) >> vault-unseal
 chmod u+x vault-unseal
