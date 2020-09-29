@@ -1,8 +1,46 @@
 #!/bin/bash
 
-echo Destroying Vault ...
+echo ==============================================================================
+echo Stopping and destroying Vault ...
+echo ==============================================================================
 sudo podman stop vault && sudo podman rm vault
 sudo podman volume rm vault-config
 sudo podman volume rm vault-data
 sudo podman volume rm vault-logs
 sudo podman volume rm vault-policies
+
+echo ==============================================================================
+echo Starting fresh Vault ...
+echo ==============================================================================
+sudo podman run -d \
+  --name vault \
+  --restart unless-stopped \
+  --cap-add IPC_LOCK \
+  -e 'VAULT_LOCAL_CONFIG={"backend": {"file": {"path": "/vault/file"}}, "listener": {"tcp": {"address": "0.0.0.0:8888", "tls_disable": 1}}, "ui": 1, "default_lease_ttl": "168h", "max_lease_ttl": "720h"}' \
+  -e 'VAULT_ADDR=http://0.0.0.0:8888' \
+  -e 'VAULT_API_ADDR=http://0.0.0.0:8888' \
+  -v vault-config:/vault/config \
+  -v vault-policies:/vault/policies \
+  -v vault-data:/vault/data \
+  -v vault-logs:/vault/logs \
+  -p 8888:8888 \
+  vault server
+export VAULT_ADDR=http://127.0.0.1:8888
+
+echo ==============================================================================
+echo Pause for Vault to come up ...
+echo ==============================================================================
+sleep 2
+
+echo ==============================================================================
+echo Initialising Vault and writing out unseal script and environment help file...
+echo NB. Obviously this is only for development not for production \!
+echo ==============================================================================
+vault operator init > vault.info
+echo export VAULT_ADDR=http://127.0.0.1:8888 > vault-env
+echo export VAULT_TOKEN=$( cat vault.info | grep "Initial Root Token" | awk -F ' ' '{print $4}' ) >> vault-env
+echo vault operator unseal $( cat vault.info | grep "Unseal Key 1" | awk -F ' ' '{print $4}' ) > vault-unseal
+echo vault operator unseal $( cat vault.info | grep "Unseal Key 2" | awk -F ' ' '{print $4}' ) >> vault-unseal
+echo vault operator unseal $( cat vault.info | grep "Unseal Key 3" | awk -F ' ' '{print $4}' ) >> vault-unseal
+rm vault.info
+chmod u+x vault-unseal
