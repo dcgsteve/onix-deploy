@@ -1,0 +1,4 @@
+#!/bin/bash
+
+podman pod stop oxpod
+sudo podman stop vault

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo podman start vault
+podman pod start oxpod
