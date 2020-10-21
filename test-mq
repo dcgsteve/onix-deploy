@@ -1,0 +1,43 @@
+#!/bin/bash
+
+echo ==================================================
+echo Destroy existing Onix message queue ...
+echo ==================================================
+podman stop oxmsg
+podman rm oxmsg
+
+echo ==================================================
+echo Re-create in memory store ...
+echo ==================================================
+STORE=/dev/shm/onix/oxmsg
+sudo rm $STORE -rf
+mkdir -p $STORE
+
+echo ==================================================
+echo Create config files ...
+echo ==================================================
+cat <<"EOF" > $STORE/mosquitto.conf
+user mosquitto
+log_dest stderr
+log_type error
+log_type warning
+log_type notice
+log_type information
+log_timestamp true
+allow_anonymous false
+password_file /mosquitto/config/mosquitto.cred
+EOF
+
+cat <<"EOF" > $STORE/mosquitto.cred
+steve:$6$Q2bz9+t8NOSI+PyC$elSnDhI9S0L7hTRARwiz4p2IKy8itcpBl0tjWFQpCYWzUgCR2VdLiWkPDvwtOimdQ31+g8ove1gw9SnKfDUy+w==
+EOF
+
+echo ==================================================
+echo Starting new Onix message queue ...
+echo ==================================================
+podman run -d \
+  --name oxmsg \
+  --pod oxpod \
+  --restart unless-stopped \
+  -v $STORE:/mosquitto/config/ \
+  eclipse-mosquitto

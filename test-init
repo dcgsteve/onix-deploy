@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# The below is purely for dev use only, not production
+
+echo ==================================================
+echo Ensuring old pod and data is destroyed ...
+echo ==================================================
+podman pod rm oxpod -f
+podman volume rm oxdb
+
+echo ==================================================
+echo Starting Onix pod ...
+echo ==================================================
+podman pod create --hostname oxpod --name oxpod \
+  -p 80:80,8080:8080,8085:8085,1883:1883
+
+echo ==================================================
+echo Starting Onix database ...
+echo ==================================================
+podman run -d --name oxdb \
+  --restart unless-stopped \
+  --pod oxpod \
+  -e POSTGRESQL_ADMIN_PASSWORD=onix \
+  -v oxdb:/var/lib/postgresql/data/ centos/postgresql-12-centos7
+
+echo ==================================================
+echo Starting adminer for debugging use ...
+echo ==================================================
+#podman run -d --name dbadmin \
+#  --restart unless-stopped \
+#  --pod oxpod \
+#  -p 8081:8080 \ <- need to put in pod
+#  adminer
+
+echo ==================================================
+echo Starting Onix database manager ...
+echo ==================================================
+podman run -d --name oxdbman \
+  --pod oxpod \
+  --rm \
+  -e OX_DBM_DB_HOST=localhost \
+  -e OX_DBM_DB_ADMINPWD=onix \
+  -e OX_DBM_HTTP_AUTHMODE=none \
+  -e OX_DBM_APPVERSION=0.0.4 \
+  gatblau/dbman-snapshot
+
+echo ==================================================
+echo Initialising database with initial schema ...
+echo ==================================================
+podman exec -it oxdbman curl -H "Content-Type: application/json" -X POST http://localhost:8085/db/create
+podman exec -it oxdbman curl -H "Content-Type: application/json" -X POST http://localhost:8085/db/deploy
+
